@@ -31,11 +31,16 @@ app.get('/write', (req, res) => {
 });
 
 app.post('/add', (req, res) => {
-    res.send('전송완료');
-    db.collection('counter').findOne('')
-    db.collection('post').insertOne({제목 : req.body.title, 날짜 : req.body.date}, (err, result)=>{
-        if(err) return console.log(err);
-        console.log('저장완료');
+    db.collection('counter').findOne({name : '게시물갯수'}, (err, result) => {
+        var total_Post = result.totalPost;
+
+        db.collection('post').insertOne({ _id : total_Post + 1, 제목 : req.body.title, 날짜 : req.body.date}, (err, result)=>{
+            console.log('저장완료');
+            db.collection('counter').updateOne({name : '게시물갯수'},{ $inc : {totalPost:1}}, (err, result) =>{
+                if(err) return console.log(err);
+                res.send('전송완료');
+            });
+        });
     });
 });
 
