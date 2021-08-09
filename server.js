@@ -44,12 +44,19 @@ app.post('/add', (req, res) => {
     });
 });
 
-
-
 app.get('/list', (req, res) => {
     db.collection('post').find().toArray((err, result) =>{
         if(err) return console.log(err);
         console.log(result);
         res.render('list.ejs', {posts : result});
+    });
+});
+
+app.delete('/delete', (req, res) => {
+    console.log(req.body);
+    req.body._id = parseInt(req.body._id);
+    db.collection('post').deleteOne(req.body, (err, result) =>{
+        if(err) return console.log(err);
+        console.log('삭제완료');
     });
 });
