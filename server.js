@@ -7,6 +7,7 @@ const dburl = "mongodb+srv://h0ch1:a02070203@nodetest.kijps.mongodb.net/myFirstD
 // app 설정
 app.use(express.urlencoded({extended: true}));
 app.set('view engine' , 'ejs');
+app.use('/public', express.static('public'));
 
 
 // DB & Server
@@ -23,11 +24,11 @@ MongoClient.connect(dburl, (err, client) => {
 
 // Routes
 app.get('/', (req, res) => {
-    res.sendFile(__dirname+'/index.html');
+    res.render('index.ejs');
 });
 
 app.get('/write', (req, res) => {
-    res.sendFile(__dirname+'/write.html');
+    res.render('write.ejs');
 });
 
 app.post('/add', (req, res) => {
@@ -56,7 +57,13 @@ app.delete('/delete', (req, res) => {
     console.log(req.body);
     req.body._id = parseInt(req.body._id);
     db.collection('post').deleteOne(req.body, (err, result) =>{
-        if(err) return console.log(err);
         console.log('삭제완료');
-    });
-});
+        res.status(200).send({ message : '성공했습니다'});
+    })
+})
+
+app.get('/detail/:id', (req, res) => {
+    db.collection('post').findOne({_id : parseInt(req.params.id)}, (err, result) =>{
+        res.render('detail.ejs', { data : result});
+    })
+})
