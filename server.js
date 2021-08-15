@@ -1,5 +1,10 @@
 const express = require('express');
 const MongoClient = require('mongodb').MongoClient;
+const methodOverride = require('method-override');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const session = require('express-session');
+
 const app = express();
 
 const dburl = "mongodb+srv://h0ch1:a02070203@nodetest.kijps.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
@@ -8,6 +13,10 @@ const dburl = "mongodb+srv://h0ch1:a02070203@nodetest.kijps.mongodb.net/myFirstD
 app.use(express.urlencoded({extended: true}));
 app.set('view engine' , 'ejs');
 app.use('/public', express.static('public'));
+app.use(methodOverride('_method'));
+app.use(session({secret : '비밀코드', reasve : true, saveUninitialized : false }));
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 // DB & Server
@@ -39,7 +48,7 @@ app.post('/add', (req, res) => {
             console.log('저장완료');
             db.collection('counter').updateOne({name : '게시물갯수'},{ $inc : {totalPost:1}}, (err, result) =>{
                 if(err) return console.log(err);
-                res.send('전송완료');
+                res.redirect('/list');
             });
         });
     });
@@ -53,17 +62,34 @@ app.get('/list', (req, res) => {
     });
 });
 
+
+//삭제
 app.delete('/delete', (req, res) => {
     console.log(req.body);
     req.body._id = parseInt(req.body._id);
     db.collection('post').deleteOne(req.body, (err, result) =>{
         console.log('삭제완료');
-        res.status(200).send({ message : '성공했습니다'});
     })
 })
 
+//상세페이지
 app.get('/detail/:id', (req, res) => {
     db.collection('post').findOne({_id : parseInt(req.params.id)}, (err, result) =>{
         res.render('detail.ejs', { data : result});
+    })
+})
+
+
+//수정
+app.get('/edit/:id', (req, res) => {
+    db.collection('post').findOne({ _id : parseInt(req.params.id)}, (err, result) => {
+        res.render('edit.ejs', { data : result});
+    })
+})
+
+app.put('/edit', (req, res) => {
+    db.collection('post').updateOne({ _id : parseInt(req.body.id)},
+    { $set : { 제목 : req.body.title, 날짜 : req.body.date}}, (err, result) => {
+        res.redirect('/list');
     })
 })
